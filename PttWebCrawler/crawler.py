@@ -37,7 +37,7 @@ class PttWebCrawler(object):
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('-i', metavar=('START_INDEX', 'END_INDEX'), type=int, nargs=2, help="Start and end index")
         group.add_argument('-a', metavar='ARTICLE_ID', help="Article ID")
-        group.add_argument('-s', metavar='SEARCH_KEYWORD', help="Search Keyword")
+        parser.add_argument('-s', metavar='SEARCH_KEYWORD', help="Search Keyword")
         parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
         if not as_lib:
@@ -54,14 +54,14 @@ class PttWebCrawler(object):
                     end = args.i[1]
                 if args.s:
                     search_keyword = args.s
-                    self.parse_articles(start, end, board, search_keyword)
+                    self.parse_articlesk(start, end, board, search_keyword)
                 else:
                     self.parse_articles(start, end, board)
             else:  # args.a
                 article_id = args.a
                 self.parse_article(article_id, board)
 
-    def parse_articles(self, start, end, board, search_keyword, path='.', timeout=3):
+    def parse_articlesk(self, start, end, board, search_keyword, path='.', timeout=3):
             filename = board + '-' + search_keyword + '-' + str(start) + '-' + str(end) + '.json'
             filename = os.path.join(path, filename)
             self.store(filename, u'{"articles": [', 'w')
