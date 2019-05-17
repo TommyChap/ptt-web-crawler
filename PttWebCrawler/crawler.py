@@ -13,7 +13,7 @@ import codecs
 from bs4 import BeautifulSoup
 from six import u
 
-__version__ = '1.0'
+__version__ = '1.t'
 
 # if python 2, disable verify flag in requests.get()
 VERIFY = True
@@ -30,13 +30,14 @@ class PttWebCrawler(object):
     def __init__(self, cmdline=None, as_lib=False):
         parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description='''
             A crawler for the web version of PTT, the largest online community in Taiwan.
-            Input: board name and page indices (or articla ID)
-            Output: BOARD_NAME-START_INDEX-END_INDEX.json (or BOARD_NAME-ID.json)
+            Input: board name and page indices (or articla ID or search keyword)
+            Output: BOARD_NAME-START_INDEX-END_INDEX.json (or BOARD_NAME-ID.json or BOARD_NAME-SEARCH_KEYWORD-START_INDEX-END_INDEX.json)
         ''')
         parser.add_argument('-b', metavar='BOARD_NAME', help='Board name', required=True)
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument('-i', metavar=('START_INDEX', 'END_INDEX'), type=int, nargs=2, help="Start and end index")
         group.add_argument('-a', metavar='ARTICLE_ID', help="Article ID")
+        group.add_argument('-s', metavar='SEARCH_KEYWORD', help="Search Keyword")
         parser.add_argument('-v', '--version', action='version', version='%(prog)s ' + __version__)
 
         if not as_lib:
@@ -51,10 +52,46 @@ class PttWebCrawler(object):
                     end = self.getLastPage(board)
                 else:
                     end = args.i[1]
-                self.parse_articles(start, end, board)
+                if args.s:
+                    search_keyword = args.s
+                    self.parse_articles(start, end, board, search_keyword)
+                else:
+                    self.parse_articles(start, end, board)
             else:  # args.a
                 article_id = args.a
                 self.parse_article(article_id, board)
+
+    def parse_articles(self, start, end, board, search_keyword, path='.', timeout=3):
+            filename = board + '-' + search_keyword + '-' + str(start) + '-' + str(end) + '.json'
+            filename = os.path.join(path, filename)
+            self.store(filename, u'{"articles": [', 'w')
+            for i in range(end-start+1):
+                index = start + i
+                print('Processing index:', str(index))
+                resp = requests.get(
+                    url = self.PTT_URL + '/bbs/' + board + '/search?page=' + str(index) + '&q=' + search_keyword,
+                    cookies={'over18': '1'}, verify=VERIFY, timeout=timeout
+                )
+                if resp.status_code != 200:
+                    print('invalid url:', resp.url)
+                    continue
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                divs = soup.find_all("div", "r-ent")
+                for div in divs:
+                    try:
+                        # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
+                        href = div.find('a')['href']
+                        link = self.PTT_URL + href
+                        article_id = re.sub('\.html', '', href.split('/')[-1])
+                        if div == divs[-1] and i == end-start:  # last div of last page
+                            self.store(filename, self.parse(link, article_id, board), 'a')
+                        else:
+                            self.store(filename, self.parse(link, article_id, board) + ',\n', 'a')
+                    except:
+                        pass
+                time.sleep(0.1)
+            self.store(filename, u']}', 'a')
+            return filename
 
     def parse_articles(self, start, end, board, path='.', timeout=3):
             filename = board + '-' + str(start) + '-' + str(end) + '.json'

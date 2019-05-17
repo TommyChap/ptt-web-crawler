@@ -44,6 +44,7 @@
 
 ```commandline
 python crawler.py -b 看板名稱 -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
+python crawler.py -b 看板名稱 -s 搜尋關鍵字 -i 起始索引 結束索引 (設為負數則以倒數第幾頁計算) 
 python crawler.py -b 看板名稱 -a 文章ID 
 ```
 
@@ -85,12 +86,13 @@ python test.py
 
 <a name="english_desc"></a>ptt-web-crawler is a crawler for the web version of PTT, the largest online community in Taiwan. 
 
-    usage: python crawler.py [-h] -b BOARD_NAME (-i START_INDEX END_INDEX | -a ARTICLE_ID) [-v]
+    usage: python crawler.py [-h] -b BOARD_NAME (-i START_INDEX END_INDEX (-s SEARCH_KEYWORD) | -a ARTICLE_ID) [-v]
     optional arguments:
       -h, --help                  show this help message and exit
       -b BOARD_NAME               Board name
       -i START_INDEX END_INDEX    Start and end index
       -a ARTICLE_ID               Article ID
+      -s SEARCH_KEYWORD           Search keyword
       -v, --version               show program's version number and exit
 
-Output would be `BOARD_NAME-START_INDEX-END_INDEX.json` (or `BOARD_NAME-ID.json`)
+Output would be `BOARD_NAME-START_INDEX-END_INDEX.json` (or `BOARD_NAME-ID.json` or `BOARD_NAME-SEARCH_KEYWORD-START_INDEX-END_INDEX.json`)
