@@ -2,6 +2,7 @@
 
 ### [English Readme](#english_desc)
 ### [Live demo](http://app.castman.net/ptt-web-crawler)
+### [原始版本](https://github.com/jwlin/ptt-web-crawler) by jwlin
 ### [Scrapy 版本](https://github.com/afunTW/ptt-web-crawler) by afunTW
 
 特色
